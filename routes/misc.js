@@ -198,4 +198,33 @@ router.delete("/bookmarks/:itemId", authenticate, async (req, res, next) => {
   } catch (e) { next(e); }
 });
 
+/* ---------------------------- PRESENCE ("X online now") ----------------------------
+   Public, no auth needed — anyone with the site open counts. Each browser
+   tab pings /presence/heartbeat every few seconds with its own random
+   session id (sent in X-Device-Id, same header used for guest likes); this
+   route just upserts that session's last_seen. /presence/count then counts
+   sessions seen within the last PRESENCE_TTL_MS, which is a real number
+   across every visitor and device, not just tabs open on one browser. */
+const PRESENCE_TTL_MS = 15000;
+
+router.post("/presence/heartbeat", async (req, res, next) => {
+  try {
+    const sessionId = req.header("X-Device-Id");
+    if (!sessionId) return res.status(400).json({ error: "Missing session id" });
+    await run(
+      "INSERT INTO presence (session_id, last_seen) VALUES (?, ?) ON CONFLICT (session_id) DO UPDATE SET last_seen = EXCLUDED.last_seen",
+      [sessionId, Date.now()]
+    );
+    res.json({ ok: true });
+  } catch (e) { next(e); }
+});
+
+router.get("/presence/count", async (req, res, next) => {
+  try {
+    const cutoff = Date.now() - PRESENCE_TTL_MS;
+    const row = await get("SELECT COUNT(*) AS c FROM presence WHERE last_seen > ?", [cutoff]);
+    res.json({ count: Math.max(Number(row.c), 1) }); // always count the requester
+  } catch (e) { next(e); }
+});
+
 module.exports = router;

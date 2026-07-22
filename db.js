@@ -194,6 +194,17 @@ async function createSchema() {
       PRIMARY KEY (user_email, item_id)
     );
   `);
+
+  // One row per open browser tab/session, across every visitor and device.
+  // A heartbeat every few seconds keeps last_seen fresh; anything older
+  // than the TTL (checked in the /count route) is treated as gone without
+  // needing a cleanup job.
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS presence (
+      session_id TEXT PRIMARY KEY,
+      last_seen  BIGINT NOT NULL
+    );
+  `);
 }
 
 async function seedAdmin() {
