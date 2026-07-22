@@ -1,6 +1,7 @@
 require("dotenv").config();
 const express = require("express");
 const cors = require("cors");
+const { initDb } = require("./db");
 
 if (!process.env.JWT_SECRET || process.env.JWT_SECRET === "change-this-to-a-long-random-string") {
   console.warn(
@@ -36,6 +37,17 @@ app.use((err, req, res, next) => {
 app.use((req, res) => res.status(404).json({ error: "Not found" }));
 
 const PORT = process.env.PORT || 8787;
-app.listen(PORT, () => {
-  console.log(`Sikh Jagat API listening on http://localhost:${PORT}`);
-});
+
+// Postgres schema creation + admin seeding happen once here, before the
+// server starts accepting requests (SQLite did this synchronously at
+// import time; Postgres needs it awaited first).
+initDb()
+  .then(() => {
+    app.listen(PORT, () => {
+      console.log(`Sikh Jagat API listening on http://localhost:${PORT}`);
+    });
+  })
+  .catch((err) => {
+    console.error("Failed to initialize the database:", err);
+    process.exit(1);
+  });
