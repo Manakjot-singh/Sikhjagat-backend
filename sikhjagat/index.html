@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Sikh Jagat</title>
+
+<!-- Fonts: Yatra One for headings/logo, Inter for body text -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+<link rel="stylesheet" href="style.css" />
+</head>
+<body>
+
+  <!-- ============ Push notification permission banner ============ -->
+  <div id="push-banner" class="push-banner hidden">
+    <div class="push-banner-inner">
+      <span>🔔 Enable push notifications for live Kirtan alerts and class reminders.</span>
+      <div class="push-banner-actions">
+        <button id="push-enable-btn">Enable</button>
+        <button id="push-dismiss-btn" class="link-btn">Dismiss</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ Translation notice (shown for languages we haven't fully translated) ============ -->
+  <div id="lang-notice" class="lang-notice hidden"></div>
+
+  <!-- ============ Header / Navigation (single line) ============ -->
+  <header class="site-header">
+    <div class="container header-row">
+      <button class="logo-btn" data-page="home">
+        <span class="logo-mark">☬</span>
+        <span class="logo-text">Sikh Jagat</span>
+      </button>
+
+      <nav class="main-nav" id="main-nav">
+        <!-- filled by JS: renderNav() -->
+      </nav>
+
+      <div class="header-actions">
+        <div class="dropdown" id="search-dropdown">
+          <button id="search-btn" class="icon-btn" title="Search">🔍</button>
+          <div class="dropdown-menu wide hidden" id="search-menu">
+            <div class="search-menu-input-wrap">
+              <input type="text" id="search-input" class="search-input" placeholder="Search…" autocomplete="off" />
+            </div>
+            <div id="search-results"></div>
+          </div>
+        </div>
+
+        <button class="icon-btn header-qr-btn" title="QR Code Generator" data-page="qr">▦</button>
+
+        <span class="header-divider"></span>
+
+        <div id="media-dropdown-slot" class="nav-desktop-only"></div>
+
+        <div class="dropdown" id="lang-dropdown">
+          <button id="lang-btn" class="icon-btn" title="Language">🌐 <span id="lang-code">EN</span></button>
+          <div class="dropdown-menu hidden" id="lang-menu"></div>
+        </div>
+
+        <button id="dark-toggle-btn" class="icon-btn" title="Toggle dark mode">🌙</button>
+
+        <button id="bookmarks-btn" class="icon-btn badge-wrap" title="Bookmarks" data-page="bookmarks">
+          🔖
+          <span class="badge hidden" id="bookmark-count">0</span>
+        </button>
+
+        <div class="dropdown" id="notif-dropdown">
+          <button id="notif-btn" class="icon-btn badge-wrap" title="Notifications">
+            <span id="notif-icon">🔔</span>
+            <span class="badge badge-red hidden" id="notif-count">0</span>
+          </button>
+          <div class="dropdown-menu wide hidden" id="notif-menu"></div>
+        </div>
+
+        <span class="header-divider"></span>
+
+        <div id="auth-area"><!-- login button OR profile menu, filled by JS --></div>
+
+        <button id="mobile-menu-btn" class="icon-btn mobile-only" title="Menu">☰</button>
+      </div>
+    </div>
+
+    <nav class="mobile-nav hidden" id="mobile-nav"></nav>
+  </header>
+
+  <!-- ============ Main content (rendered entirely by JS) ============ -->
+  <main id="app"></main>
+
+  <!-- ============ Footer ============ -->
+  <footer class="site-footer">
+    <div class="container footer-grid">
+      <div class="footer-brand">
+        <div class="logo-row">
+          <span class="logo-mark">☬</span>
+          <span class="logo-text">Sikh Jagat</span>
+        </div>
+        <p class="footer-mission" id="footer-mission"></p>
+        <p class="footer-tag" id="footer-tag"></p>
+        <div class="social-row">
+          <a href="#" onclick="return false">f</a>
+          <a href="#" onclick="return false">▶</a>
+          <a href="#" onclick="return false">◎</a>
+          <a href="#" onclick="return false">𝕏</a>
+        </div>
+      </div>
+      <div>
+        <h4>Explore</h4>
+        <ul id="footer-explore"></ul>
+      </div>
+      <div>
+        <h4>Get in touch</h4>
+        <ul class="footer-contact" id="footer-contact"></ul>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="container footer-bottom-inner">
+        <span>© 2026 Sikh Jagat. Built as seva for the Sangat.</span>
+        <span class="footer-legal" id="footer-legal"></span>
+        <span>👁 <span id="visitor-count">0</span> visitors</span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ============ Floating buttons ============ -->
+  <a id="whatsapp-btn" class="fab fab-whatsapp" target="_blank" rel="noopener noreferrer" title="Chat on WhatsApp">💬</a>
+
+  <!-- ============ Auth modal ============ -->
+  <div id="auth-modal-backdrop" class="modal-backdrop hidden">
+    <div class="modal">
+      <div class="modal-header">
+        <h3 id="auth-modal-title">Sign in</h3>
+        <button id="auth-modal-close">✕</button>
+      </div>
+      <div class="modal-body" id="auth-modal-body"></div>
+    </div>
+  </div>
+
+  <!-- ============ Media detail modal (photos/videos/vlogs/podcasts/articles) ============ -->
+  <div id="media-modal-backdrop" class="modal-backdrop hidden">
+    <div class="modal media-modal" id="media-modal">
+      <div class="modal-header">
+        <h3 id="media-modal-title">Title</h3>
+        <div class="modal-header-actions">
+          <button id="media-modal-prev" title="Previous">‹</button>
+          <button id="media-modal-next" title="Next">›</button>
+          <button id="media-modal-fullscreen" title="Toggle full screen">⛶</button>
+          <button id="media-modal-close" title="Close">✕</button>
+        </div>
+      </div>
+      <div class="modal-body" id="media-modal-body"></div>
+    </div>
+  </div>
+
+  <!-- ============ Toast notifications ============ -->
+  <div id="toast-stack" class="toast-stack"></div>
+
+  <script src="data.js"></script>
+  <script src="storage.js"></script>
+  <script src="api.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
